@@ -90,8 +90,6 @@ parameters (2,401,732 vs 2,400,708). One seed per arm.
 | exact particle count | **99.0%** | 81.0% |
 | final training loss | **0.0105** | 0.0219 |
 
-![Experiment A](experiment_latent512_attention_v16/results/fig_pooling.png)
-
 **Takeaway: attention made every number worse**, including the control and
 the particle count. The gap stays the same even on jets where both models
 count correctly, and the Set2Set model trained to twice the loss.
@@ -118,7 +116,6 @@ Reach = layers × (K − 1).
 Mean ± standard deviation over 3 seeds. Every individual metric, with t-tests
 between models, is in `results/results_reach.md`.
 
-![Experiment B](experiment_latent64_reach_v17/results/fig_reach.png)
 
 **Takeaway: seeing 10 hops instead of 2 gives no benefit.** K = 6 is slightly
 worse, but equally worse on the per-particle quantities that need no reach at
@@ -142,7 +139,7 @@ The full generator: autoencoder + a **conditional flow-matching model on the
 latent**. New jets are made by sampling a latent from noise and decoding it.
 
 
-**Status: work still in progress** the generative pipeline is still being configured to be reliable and stable than EPIC-GAN and faster than EPIC-FM.
+**Status: work still in progress**- The generative pipeline is still being configured to be reliable and stable than EPIC-GAN and faster than EPIC-FM.
 
 ---
 
