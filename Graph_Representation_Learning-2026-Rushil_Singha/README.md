@@ -51,10 +51,6 @@ rebuilt copy:
 paired relative error = average over jets of |copy − real|  ÷  spread of the real values
 ```
 
-**0 is perfect; 0.15 means the copy is off by 15% of the normal jet-to-jet
-variation.** The quantities are grouped by one test: *can it be computed from
-sums over single particles?*
-
 | group | quantity | formula (wᵢ = momentum share) | why it's in this group |
 |---|---|---|---|
 | **Pairwise** | ECF(2, β=1) | Σᵢ<ⱼ wᵢ wⱼ ΔRᵢⱼ | the √ in ΔR cannot be split into single-particle sums |
@@ -100,11 +96,6 @@ parameters (2,401,732 vs 2,400,708). One seed per arm.
 the particle count. The gap stays the same even on jets where both models
 count correctly, and the Set2Set model trained to twice the loss.
 
-*Notes.* These runs used the v16 code, whose kNN graph was directed (fixed in
-v17 — see "Lessons" below); a GraphSAGE-vs-GraphSAGE comparison is still
-fair. The numbers above were re-scored with the v17 metric suite.
-`code/slurm_local.sh` / `slurm_global.sh` also trained ChebNet variants in the
-same round; those are left out because the directed graph distorted ChebNet.
 
 ---
 
@@ -142,8 +133,6 @@ same size) are equal within seed noise.
 - **Reach adds nothing to the latent.** A small network reading ECF(2, β=1)
   straight from the frozen 64 numbers does equally well for K = 2 and K = 6
   (0.073 vs 0.076).
-- **The decoder is the bottleneck.** The latent holds about twice as much as
-  the decoder rebuilds, for every encoder alike.
 
 ---
 
@@ -152,45 +141,8 @@ same size) are equal within seed noise.
 The full generator: autoencoder + a **conditional flow-matching model on the
 latent**. New jets are made by sampling a latent from noise and decoding it.
 
-| part | setting |
-|---|---|
-| graph | kNN k = 10 (directed) |
-| encoder | 4 × Euler-ChebConv (K = 10), anti-symmetric weights, Set2Set pooling, latent 512 |
-| decoder | 150-slot decoder with self-attention, STE hard mask, pT normalised over active particles, η/φ bounded to ±2 |
-| AE loss | Sinkhorn (η, φ, 10·pT) + mask BCE + multiplicity count loss, 300 epochs |
-| flow | conditional flow matching on the latent: 8 FiLM blocks × 2048 hidden, conditioned on jet type, jet pT, jet mass and multiplicity; 1000 epochs; 750 Euler steps to sample |
 
-**JetNet metrics** (`results/eval_jetnet_metrics.json`, 25k jets, all three
-jet types pooled) next to EPiC-GAN's JetNet150 numbers
-([Buhmann et al. 2023](https://arxiv.org/abs/2301.08128), per jet type):
-
-| metric | v15.2 | EPiC-GAN (gluon / quark / top) |
-|---|---|---|
-| W1 jet mass (×10⁻³) | 12.8 | 0.4 / 0.4 / 0.6 |
-| W1 particle features (×10⁻³) | 8.6 | 3.2 / 3.9 / 3.7 |
-| W1 EFPs (×10⁻⁵) | 57 | 1.1 / 0.7 / 2.8 |
-| reconstruction W1 jet mass (×10⁻³) | 8.4 | — |
-
-**Status: not yet competitive.** The flow was conditioned on each evaluated
-jet's own mass, pT and multiplicity (EPiC-GAN is unconditional), the jet types
-were pooled, and this version predates the fixes below. The reconstruction
-numbers already show the main limit: a latent generator can never beat the
-decoder's reconstruction quality.
-
----
-
-## Lessons learned between versions
-
-| version | change | why it mattered |
-|---|---|---|
-| v15 → v15.2 | η/φ bound 0.8 → 2.0; straight-through hard mask; count loss | 0.8 clipped real particles; multiplicity was unconstrained |
-| v15.2 → v16 | flow removed; Set2Set replaced by StatsPool in the main arm; reconstruction metrics | isolate what the *encoder* contributes |
-| v16 → v17 | **undirected kNN graph** | sklearn's kNN graph is directed; ChebNet's Chebyshev terms then grow with K, penalising large K for reasons unrelated to reach |
-| v16 → v17 | 1/√K term scaling | the Euler update grew with K |
-| v16 → v17 | energy-flow EMD (pT-weighted, ΔR/R) | the old "EMD" weighted particles equally |
-| v16 → v17 | metrics sorted into pairwise / per-particle / control | girth, mass and ECF(β=2) factorise and cannot test reach |
-| v17 | D₂ reported but not averaged | its error rewarded worse-trained models, even on a log scale |
-| v17 | checkpoint resume fixed | resume had silently restarted from epoch 0 |
+**Status: work still in progress** the generative pipeline is still being configured to be reliable and stable than EPIC-GAN and faster than EPIC-FM.
 
 ---
 
@@ -255,5 +207,4 @@ GraphSAGE runs are reported here. See `code/README.md`.
 
 ## Acknowledgements
 
-This work was done during Google Summer of Code with [organisation], mentored
-by [mentor names]. Computing resources: NERSC.
+This work was done during Google Summer of Code with ML4SCI'2026 as a part of the project *Graph Representation Learning for Fast Detector Simulation*
